@@ -72,4 +72,6 @@
 ## ترخيص
 هذا المشروع يُقدّم لأغراض تعليمية وتجريبية.
 
+— For English version, see: [README.en.md](./README.en.md)
+
 Laravel to-do app with Sanctum cookie authentication. Frontend page at `/tasks`.
