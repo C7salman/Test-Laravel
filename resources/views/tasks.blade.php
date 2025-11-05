@@ -284,24 +284,35 @@
     async function loadUser() {
         try {
             const res = await fetch('/api/session/user', { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' });
-            if (!res.ok) { 
+            if (!res.ok) {
                 createCard.hidden = true;
                 listCard.hidden = true;
                 welcomeCard.hidden = true;
                 registerCard.hidden = false;
                 loginCard.hidden = false;
-                return;
+                userInfo.textContent = '';
+                return false;
             }
             const user = await safeJson(res);
-            userInfo.textContent = `مسجل بإسم: ${escapeHtml(user.name || '')}” ${escapeHtml(user.email || '')}`;
+            if (!user || (!user.id && !user.email)) {
+                createCard.hidden = true;
+                listCard.hidden = true;
+                welcomeCard.hidden = true;
+                registerCard.hidden = false;
+                loginCard.hidden = false;
+                userInfo.textContent = '';
+                return false;
+            }
+            userInfo.textContent = `مسجل بإسم: ${escapeHtml(user.name || '')} (${escapeHtml(user.email || '')})`;
+            welcomeText.textContent = `مرحبًا، ${escapeHtml(user.name || '')} (${escapeHtml(user.email || '')})`;
             logoutBtn.disabled = false;
             createCard.hidden = false;
             listCard.hidden = false;
-            welcomeText.textContent = `مرحبًا، ${escapeHtml(user.name || '')} (${escapeHtml(user.email || '')})`;
             welcomeCard.hidden = false;
             registerCard.hidden = true;
             loginCard.hidden = true;
-        } catch (e) { console.error(e); }
+            return true;
+        } catch (e) { console.error(e); userInfo.textContent = ''; return false; }
     }
 
     async function loadTasks() {
@@ -483,8 +494,8 @@
 
     // Boot
     window.addEventListener('DOMContentLoaded', async () => {
-        await loadUser();
-        if (userInfo.textContent) {
+        const ok = await loadUser();
+        if (ok) {
             await loadTasks();
         }
     });
