@@ -9,7 +9,8 @@
         body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Naskh Arabic", "Noto Sans"; background: #f6f7fb; color: #222; }
         .container { max-width: 860px; margin: 32px auto; padding: 0 16px; }
         h1 { margin: 0 0 16px; font-size: 24px; }
-        .grid { display: grid; gap: 16px; }
+        .grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+        @media (min-width: 768px) { .grid { grid-template-columns: 1fr 1fr; align-items: start; } #welcomeCard { grid-column: 1 / -1; } }
         .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); padding: 16px; }
         label { font-size: 13px; color: #555; display:block; margin-bottom: 6px; }
         input, textarea { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; outline: none; }
@@ -38,7 +39,7 @@
 <div class="container">
     <h1>To Do List</h1>
     <div class="grid">
-        <div class="card">
+        <div class="card" id="registerCard">
             <h2 style="margin-top:0">إنشاء حساب</h2>
             <div class="row">
                 <div>
@@ -55,7 +56,7 @@
                 <span id="register-msg" class="status"></span>
             </div>
         </div>
-        <div class="card">
+        <div class="card" id="loginCard">
             <h2 style="margin-top:0">تسجيل الدخول</h2>
             <div class="row">
                 <div>
@@ -75,7 +76,16 @@
             <div id="userInfo" class="small" style="margin-top:8px"></div>
         </div>
 
-        <div class="card">
+        <!-- بطاقة ترحيب بعد تسجيل الدخول -->
+        <div class="card" id="welcomeCard" hidden>
+            <h2 style="margin-top:0">مرحبًا</h2>
+            <div id="welcomeText" class="small" style="margin-top:8px"></div>
+            <div class="actions" style="margin-top:10px">
+                <button id="welcomeLogout" class="secondary">تسجيل الخروج</button>
+            </div>
+        </div>
+
+        <div class="card" id="createCard" hidden>
             <h2 style="margin-top:0">إنشاء مهمة جديدة</h2>
             <div class="row">
                 <div>
@@ -93,7 +103,7 @@
             </div>
         </div>
 
-        <div class="card">
+        <div class="card" id="listCard" hidden>
             <h2 style="margin-top:0">عرض المهام</h2>
             <div class="actions" style="margin-bottom:8px">
                 <button id="refresh" class="outline">تحديث المهام</button>
@@ -125,6 +135,12 @@
     const refreshBtn = document.getElementById('refresh');
     const listStatus = document.getElementById('listStatus');
     const tasksEl = document.getElementById('tasks');
+    const createCard = document.getElementById('createCard');
+    const listCard = document.getElementById('listCard');
+    const registerCard = document.getElementById('registerCard');
+    const loginCard = document.getElementById('loginCard');
+    const welcomeCard = document.getElementById('welcomeCard');
+    const welcomeText = document.getElementById('welcomeText');
 
     let csrfToken = null;
 
@@ -191,6 +207,11 @@
             const data = await safeJson(res);
             setStatus(authStatus, 'تم تسجيل الدخول بنجاح.');
             logoutBtn.disabled = false;
+            createCard.hidden = false;
+            listCard.hidden = false;
+            registerCard.hidden = true;
+            loginCard.hidden = true;
+            welcomeCard.hidden = false;
             await loadUser();
             await loadTasks();
         } catch (e) {
@@ -218,6 +239,11 @@
             setStatus(authStatus, 'تم تسجيل الخروج بنجاح.');
             userInfo.textContent = '';
             logoutBtn.disabled = true;
+            createCard.hidden = true;
+            listCard.hidden = true;
+            welcomeCard.hidden = true;
+            registerCard.hidden = false;
+            loginCard.hidden = false;
             tasksEl.innerHTML = '';
         } catch (e) {
             console.error(e);
@@ -258,10 +284,23 @@
     async function loadUser() {
         try {
             const res = await fetch('/api/session/user', { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' });
-            if (!res.ok) return;
+            if (!res.ok) { 
+                createCard.hidden = true;
+                listCard.hidden = true;
+                welcomeCard.hidden = true;
+                registerCard.hidden = false;
+                loginCard.hidden = false;
+                return;
+            }
             const user = await safeJson(res);
             userInfo.textContent = `مسجل بإسم: ${escapeHtml(user.name || '')}” ${escapeHtml(user.email || '')}`;
             logoutBtn.disabled = false;
+            createCard.hidden = false;
+            listCard.hidden = false;
+            welcomeText.textContent = `مرحبًا، ${escapeHtml(user.name || '')} (${escapeHtml(user.email || '')})`;
+            welcomeCard.hidden = false;
+            registerCard.hidden = true;
+            loginCard.hidden = true;
         } catch (e) { console.error(e); }
     }
 
@@ -439,6 +478,7 @@
     logoutBtn.addEventListener('click', logout);
     refreshBtn.addEventListener('click', loadTasks);
     createBtn.addEventListener('click', createTask);
+    document.getElementById('welcomeLogout').addEventListener('click', logout);
     regBtn.addEventListener('click', register);
 
     // Boot
