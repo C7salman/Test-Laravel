@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // دعم مصادقة SPA عبر Sanctum بالكوكيز لمسارات API
         $middleware->prependToGroup('api', \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class);
+        // فرض ترميز UTF-8 لكل الردود النصية لمنع تشوه العربية
+        $middleware->append(\App\Http\Middleware\ForceUtf8Headers::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
