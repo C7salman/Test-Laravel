@@ -294,9 +294,9 @@
         li.innerHTML = `
             <div class="title">${escapeHtml(t.title || '(بدون عنوان)')}</div>
             ${t.description ? `<div class="desc">${escapeHtml(t.description)}</div>` : ''}
-            <div class="meta small">${t.completed ? 'غير مكتملة' : 'مكتملة'}</div>
+            <div class="meta small">${t.completed ? 'مكتملة' : 'غير مكتملة'}</div>
             <div class="actions">
-                <button class="toggle">${t.completed ? 'تحديد كمكتمله' : 'إلغاء الإكمال'}</button>
+                <button class="toggle">${t.completed ? 'إلغاء الإكمال' : 'تحديد كمكتملة'}</button>
                 <button class="edit secondary">تعديل</button>
                 <button class="delete danger">حذف</button>
             </div>
@@ -403,8 +403,8 @@
             }
             const updated = await safeJson(res);
             li.classList.toggle('done', !!updated.completed);
-            li.querySelector('.meta').textContent = updated.completed ? 'غير مكتملة' : ' مكتملة';
-            li.querySelector('.toggle').textContent = updated.completed ? 'تحديد كمكتمله' : 'إلغاء الإكمال';
+            li.querySelector('.meta').textContent = updated.completed ? 'مكتملة' : 'غير مكتملة';
+            li.querySelector('.toggle').textContent = updated.completed ? 'إلغاء الإكمال' : 'تحديد كمكتملة';
         } catch (e) { console.error(e); alert(e.message); }
     }
 
