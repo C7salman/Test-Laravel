@@ -1,77 +1,78 @@
 # Test-Laravel
 
-تطبيق مهام (To‑Do) مبني على Laravel مع مصادقة Sanctum باستخدام الكوكيز (SPA). يتضمن صفحة واجهة بسيطة عند المسار `/tasks` تُنفّذ دورة كاملة: إنشاء حساب، تسجيل دخول/خروج، عرض المهام، إنشاء/تعديل/حذف، وتبديل حالة الإكمال.
+Laravel to-do application using Sanctum cookie authentication (SPA-style). It ships with a simple UI at `/tasks` that covers registration, login/logout, listing tasks, creating/updating/deleting, and toggling completion.
 
-## المتطلبات
+## Requirements
 - PHP 8.2+
 - Composer
-- SQLite (افتراضيًا يتم استخدام ملف قاعدة بيانات داخل `database/database.sqlite`)
-- اختياري: Node.js لإدارة الأصول
+- SQLite (default DB at `database/database.sqlite`)
+- Optional: Node.js for asset tooling
 
-## الإعداد السريع
-1) انسخ ملف البيئة:
+## Quick Setup
+1) Copy environment file:
    - `cp .env.example .env`
-2) أنشئ مفتاح التطبيق:
+2) Generate app key:
    - `php artisan key:generate`
-3) تأكد من وجود قاعدة البيانات:
-   - أنشئ ملفًا فارغًا: `database/database.sqlite`
-4) نفّذ الترقيات:
+3) Ensure database file exists:
+   - Create an empty file: `database/database.sqlite`
+4) Run migrations:
    - `php artisan migrate`
 
-نصائح إعداد البيئة:
-- اضبط `APP_URL` في `.env` على `http://127.0.0.1:8000` (أو المنفذ الذي ستستخدمه).
-- إعداد `SANCTUM_STATEFUL_DOMAINS` يحتوي افتراضيًا على `127.0.0.1`، مما يتيح طلبات الكوكيز من نفس الأصل.
+Environment tips:
+- Set `APP_URL` in `.env` to your local URL (e.g. `http://127.0.0.1:8000`).
+- `SANCTUM_STATEFUL_DOMAINS` includes `127.0.0.1` by default for same-origin cookie requests.
 
-## التشغيل محليًا
-- شغّل السيرفر: `php artisan serve`
-- افتح: `http://127.0.0.1:8000/tasks`
+## Run Locally
+- Start server: `php artisan serve`
+- Open: `http://127.0.0.1:8000/tasks`
 
-## المصادقة (Sanctum عبر الكوكيز)
-هذا التطبيق يستخدم أسلوب SPA مع Sanctum؛ جميع طلبات المهام تحت `web + auth:sanctum` وتُعامل كطلبات حالة (stateful) باستخدام الكوكيز.
+## Authentication (Sanctum via cookies)
+This app uses Sanctum in SPA mode. All task routes run under `web + auth:sanctum` and are treated as stateful requests using cookies.
 
-التدفق المتوقع للمتصفح:
-- احصل على CSRF أولًا: `GET /sanctum/csrf-cookie`
-- للطلبات المعدِّلة (POST/PUT/PATCH/DELETE) أرسل رأس `X-XSRF-TOKEN` بالقيمة المأخوذة من كوكي `XSRF-TOKEN`، مع `credentials: 'same-origin'`.
+Expected browser flow:
+- Get CSRF first: `GET /sanctum/csrf-cookie`
+- For mutating requests (POST/PUT/PATCH/DELETE) send `X-XSRF-TOKEN` header with the value from `XSRF-TOKEN` cookie, and use `credentials: 'same-origin'`.
 
-نقاط النهاية المستخدمة:
-- الجلسة:
-  - `POST /api/session/login` تسجيل الدخول (بالبريد وكلمة المرور)
-  - `GET  /api/session/user` معلومات المستخدم الحالي
-  - `POST /api/session/logout` تسجيل الخروج
-- إنشاء حساب:
-  - `POST /api/register` مع CSRF والكوكيز
-- المهام:
-  - `GET    /api/tasks` عرض المهام
-  - `POST   /api/tasks` إنشاء مهمة
-  - `PUT    /api/tasks/{task}` تعديل
-  - `PATCH  /api/tasks/{task}/toggle` تبديل حالة الإكمال
-  - `DELETE /api/tasks/{task}` حذف
+Endpoints
+- Session:
+  - `POST /api/session/login` (email, password)
+  - `GET  /api/session/user`
+  - `POST /api/session/logout`
+- Registration:
+  - `POST /api/register` (with CSRF and cookies)
+- Tasks:
+  - `GET    /api/tasks`
+  - `POST   /api/tasks`
+  - `PUT    /api/tasks/{task}`
+  - `PATCH  /api/tasks/{task}/toggle`
+  - `DELETE /api/tasks/{task}`
 
-ملاحظة حول الراوت:
-- تم نقل راوت المهام إلى `routes/web.php` تحت `prefix('api')->middleware(['web','auth:sanctum'])` لضمان قراءة الكوكيز بنمط SPA.
+Routing note:
+- Task routes were placed in `routes/web.php` under `prefix('api')->middleware(['web','auth:sanctum'])` to ensure SPA cookie handling.
 
-## واجهة `/tasks`
-- الصفحة `resources/views/tasks.blade.php` تحتوي سكربتًا بسيطًا يتكامل مع النقاط أعلاه.
-- دالة `ensureCsrf()` تجلب كوكي CSRF وتقرأ `XSRF-TOKEN`.
-- دوال `register`, `login`, `createTask`, `toggleTask`, `deleteTask` تُرسِل الرأس `X-XSRF-TOKEN` وتستعمل `credentials: 'same-origin'`.
+## `/tasks` UI
+- See `resources/views/tasks.blade.php`.
+- `ensureCsrf()` fetches the CSRF cookie and reads `XSRF-TOKEN`.
+- `register`, `login`, `createTask`, `toggleTask`, `deleteTask` send `X-XSRF-TOKEN` and use `credentials: 'same-origin'`.
 
-## أوامر شائعة
-- تثبيت الاعتماديات: `composer install`
-- الترقيات: `php artisan migrate`
-- تشغيل: `php artisan serve`
-- إنشاء مستخدم تجريبي (اختياري عبر التسجيل من الواجهة): افتح `/tasks` وأنشئ حسابًا جديدًا.
+## Common Commands
+- Install deps: `composer install`
+- Migrate: `php artisan migrate`
+- Run: `php artisan serve`
+- Create a test user: use the registration section on `/tasks`.
 
-## ملاحظات أمنية
-- لا تُضمِّن `.env` في المستودع (مستثنى عبر `.gitignore`).
-- عند العمل عبر طلبات خارج المتصفح، تأكد من الحصول على CSRF وإرسال `X-XSRF-TOKEN`، وإلا ستحصل على 419.
+## Security Notes
+- Do not commit `.env` (ignored by `.gitignore`).
+- When calling from outside the browser, always fetch CSRF and send `X-XSRF-TOKEN` or you will get 419.
 
-## مشاكل شائعة
-- 401 عند `GET /api/tasks`: يظهر إن لم تكن مسجّلًا الدخول؛ سجّل أولًا ثم حدّث القائمة.
-- 419 عند `POST /api/register`: يعني أن CSRF غير مُرسَل؛ استدعِ `/sanctum/csrf-cookie` ثم أرسل `X-XSRF-TOKEN` مع الكوكيز.
+## Troubleshooting
+- 401 on `GET /api/tasks`: you are not logged in—login first, then refresh.
+- 419 on `POST /api/register`: CSRF missing—call `/sanctum/csrf-cookie` and send `X-XSRF-TOKEN` with cookies.
 
-## ترخيص
-هذا المشروع يُقدّم لأغراض تعليمية وتجريبية.
+## License
+Provided for educational and demo purposes.
 
-— For English version, see: [README.en.md](./README.en.md)
+## Author
+Salman Alzahrani — All rights reserved.
 
-Laravel to-do app with Sanctum cookie authentication. Frontend page at `/tasks`.
+— For Arabic version, see: [README.ar.md](./README.ar.md)
