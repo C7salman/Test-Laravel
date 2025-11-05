@@ -23,6 +23,7 @@
         button.danger { border-color: #b91c1c; background: #b91c1c; }
         button.outline { background: transparent; color: #2563eb; }
         button:disabled { opacity: 0.6; cursor: not-allowed; }
+        #createTask { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
         .status { font-size: 13px; color: #2563eb; }
         .status.error { color: #b91c1c; }
         .empty { padding: 16px; text-align: center; color: #6b7280; }
@@ -34,14 +35,14 @@
         .task .desc { font-size: 14px; color: #444; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
         .meta { display: flex; gap: 8px; align-items: center; }
         .small { font-size: 12px; color: #6b7280; }
-        /* حذف: زر أيقونة بدون خلفية، يتلوّن بالأحمر عند المرور */
+        /* Delete: icon-only button without background; turns red on hover */
         .actions button.delete { background: transparent; border-color: transparent; color: #6b7280; }
         .actions button.delete.danger { background: transparent; border-color: transparent; }
         .actions button.delete:hover { color: #b91c1c; }
-        /* تعديل: زر أيقونة بدون خلفية، يبقى رماديًا ثابتًا */
+        /* Edit: icon-only button without background; stays gray */
         .actions button.edit.secondary { background: transparent; border-color: transparent; color: #6b7280; }
         .actions button.edit:hover { color: #6b7280; }
-        /* تحديد كمكتملة: زر أيقونة بدون خلفية، يبقى رماديًا ثابتًا */
+        /* Toggle complete: icon-only button without background; stays gray */
         .actions button.toggle { background: transparent; border-color: transparent; color: #6b7280; }
         .actions button.toggle:hover { color: #6b7280; }
     </style>
@@ -88,7 +89,7 @@
 
         <!-- بطاقة ترحيب بعد تسجيل الدخول -->
         <div class="card" id="welcomeCard" hidden>
-            <h2 style="margin-top:0">مرحبًا</h2>
+            <h2 style="margin-top:0">نظم مهامك بسهولة</h2>
             <div id="welcomeText" class="small" style="margin-top:8px"></div>
             <div class="actions" style="margin-top:10px">
                 <button id="welcomeLogout" class="secondary">تسجيل الخروج</button>
@@ -108,7 +109,16 @@
                 </div>
             </div>
             <div class="actions" style="margin-top:10px">
-                <button id="createTask">إنشاء مهمة</button>
+                <button id="createTask">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" id="Add-Square--Streamline-Solar" height="24" width="24" aria-hidden="true" focusable="false">
+                      <desc>Add Square Streamline Icon: https://streamlinehq.com</desc>
+                      <g id="Line Duotone/Essentional UI/Add Square">
+                        <path id="Vector" stroke="currentColor" d="M2 12c0 -4.71405 0 -7.07107 1.46447 -8.53553C4.92893 2 7.28595 2 12 2c4.714 0 7.0711 0 8.5355 1.46447C22 4.92893 22 7.28595 22 12c0 4.714 0 7.0711 -1.4645 8.5355C19.0711 22 16.714 22 12 22c-4.71405 0 -7.07107 0 -8.53553 -1.4645C2 19.0711 2 16.714 2 12Z" stroke-width="1.5"></path>
+                        <path id="Vector_2" stroke="currentColor" stroke-linecap="round" d="M15 12h-3m0 0H9m3 0V9m0 3v3" stroke-width="1.5"></path>
+                      </g>
+                    </svg>
+                    إنشاء المهمة
+                </button>
                 <span id="createStatus" class="status"></span>
             </div>
         </div>
@@ -322,7 +332,7 @@
                 return false;
             }
             userInfo.textContent = `مسجل بإسم: ${escapeHtml(user.name || '')} (${escapeHtml(user.email || '')})`;
-            welcomeText.textContent = `مرحبًا، ${escapeHtml(user.name || '')} (${escapeHtml(user.email || '')})`;
+            welcomeText.textContent = `مرحبًا، ${escapeHtml(user.name || '')}`;
             if (logoutBtn) logoutBtn.disabled = false;
             createCard.hidden = false;
             listCard.hidden = false;
@@ -351,7 +361,8 @@
             for (const t of tasks) {
                 tasksEl.appendChild(renderTaskItem(t));
             }
-            setStatus(listStatus, 'تم التحميل.');
+            // بعد اكتمال الجلب وظهور المهام، لا حاجة لرسالة "تم التحميل"
+            setStatus(listStatus, '');
         } catch (e) { console.error(e); setStatus(listStatus, e.message, false); }
     }
 
@@ -391,7 +402,7 @@
                 </button>
             </div>
         `;
-        // ضبط الأيقونة الابتدائية حسب حالة المهمة
+        // Set initial toggle icon based on task completion state
         const initToggleBtn = li.querySelector('.toggle');
         if (initToggleBtn && t.completed) {
             initToggleBtn.innerHTML = `
@@ -525,7 +536,7 @@
                       </g>
                     </svg>`;
             }
-            // تحديث الأيقونة حسب الحالة: ممّاحة عند "إلغاء الإكمال" وأيقونة مهمة عند "تحديد كمكتملة"
+            // Update toggle icon: eraser when completed, task icon when not completed
             if (toggleBtn) {
                 toggleBtn.innerHTML = updated.completed
                     ? `
